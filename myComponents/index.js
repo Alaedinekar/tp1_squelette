@@ -342,6 +342,7 @@ display: flex;
 }
 
 .contenuBtn{
+display:block;
 background: grey;
 padding: 20px
 }
@@ -369,7 +370,7 @@ display: flex;
     </div>
     </div>
     
-    <div class="contenuBtn">
+    <div class="contenuBtn" id="btnEdi">
     <h1>EDITION</h1>
     <div class="buttonEditor">
     <div>
@@ -383,7 +384,7 @@ display: flex;
     <div>
     texte :<input type="text" id="logoEdit">
     </div>
-      <div>Taille :  <input type="range" min=5 max=100 
+      <div>taille :  <input type="range" min=5 max=100 
                           id="selecteurTaille"> 
                           </div>
                           <div> Couleur : <input type="color" id="selecteurCouleur"></div>
@@ -434,27 +435,81 @@ display: flex;
 </select>
 
 </div>
-</div>
-
 <button id="btnExport">Exporter le logo</button>
 </div>
+
+</div>
+
+<button id="btnCacher">Cacher l'editeur</button>
     `;
 
     constructor() {
         super();
         // On crée le "shadow DOM"
         this.attachShadow({mode: "open"});
-
+        const url = new URLSearchParams(window.location.search);
+        console.log('LOLOLO ', url, url.get('h'));
         // récupérer les propriétés/attributs HTML
         this.couleur = this.getAttribute("couleur");
         if (!this.couleur) this.couleur = "black";
 
         console.log("couleur récupérée = " + this.couleur);
 
-        this.text = this.getAttribute("text");
+        this.text = this.getAttribute("texte");
+        if (url.get('texte')) {
+            this.text = url.get('texte');
+        }
         this.animationClass = this.getAttribute("animation");
+        if (url.get('anim')) {
+            this.animationClass = url.get('anim');
+        }
+
         this.controls = this.getAttribute("controls");
+        if (url.get('controls')) {
+            this.controls = url.get('controls');
+        }
+
         this.size = this.getAttribute("size");
+        if (url.get('taille')) {
+            this.size = url.get('taille');
+        }
+        //
+        this.hauteur = this.getAttribute("hauteur");
+
+        if (url.get('h')) {
+            this.hauteur = url.get('h');
+        }
+        this.largeur = this.getAttribute("largeur");
+        if (url.get('l')) {
+            this.largeur = url.get('l');
+        }
+        this.borderColor = this.getAttribute("borderColor");
+
+        if (url.get('colorB')) {
+            this.borderColor = url.get('colorB');
+        }
+        this.borderSize = this.getAttribute("borderSize");
+        if (url.get('lb')) {
+            this.borderSize = url.get('lb');
+        }
+
+        this.borderRadius = this.getAttribute("borderRadius")
+        if (url.get('rb')) {
+            this.borderRadius = url.get('rb');
+        }
+
+
+        this.posText = this.getAttribute("posText");
+        if (url.get('pos')) {
+            this.posText = url.get('pos');
+        }
+
+        this.policeText = this.getAttribute("policeText");
+        if (url.get('police')) {
+            this.policeText = url.get('police');
+        }
+
+
         this.currentBackground = "images/water.jpeg)";
     }
 
@@ -467,6 +522,19 @@ display: flex;
         // affecter les valeurs des attributs à la création
         this.logo.style.color = this.couleur;
         this.logo.classList.add(this.animationClass);
+        this.logo.innerHTML = this.text;
+        this.logo.style.height = this.hauteur;
+        this.logo.style.width = this.largeur;
+        this.logo.style.fontSize = this.size;
+        this.logo.style.borderColor = this.borderColor;
+        this.logo.style.borderWidth = this.borderSize;
+        this.logo.style.borderRadius = this.borderRadius;
+        this.logo.style.textAlign = this.posText;
+        this.logo.style.fontSize = this.policeText;
+
+        if (this.controls !== "true") {
+            this.shadowRoot.querySelector("#contenuBtn").style.display = none;
+        }
         this.declareEcouteurs();
 
         // On modifie les URLs relatifs
@@ -486,6 +554,11 @@ display: flex;
     }
 
     declareEcouteurs() {
+
+        this.shadowRoot.querySelector("#btnCacher")
+            .addEventListener("click", (event) => {
+                this.changeControl();
+            });
         this.shadowRoot.querySelector("#selecteurCouleur")
             .addEventListener("input", (event) => {
                 this.changeCouleur(event.target.value);
@@ -547,25 +620,22 @@ display: flex;
             .addEventListener('input', (event) => {
                 this.changeAnimation(event);
             });
-        this.shadowRoot.querySelector("#borderRadius")
-            .addEventListener('input', (event) => {
-                this.changeborderRadius(event);
-            });
+
         this.shadowRoot.querySelector("#btnExport")
             .addEventListener('click', (event) => {
                 this.exportUrl();
             });
 
+        this.shadowRoot.querySelector("#borderRadius")
+            .addEventListener("input", (event) => {
+                this.changeRadius(event.target.value);
+            });
 
     }
 
-    changeborderRadius(event) {
-        console.log('radius', event.target.value)
-        this.logo.style.borderRadius = event.target.value;
-        this.shadowRoot.querySelector("#logo").style.borderRadius = `${event.target.value} px`;
-        console.log(`${event.target.value} px`)
 
-
+    changeRadius(val) {
+        this.logo.style.borderRadius = val + "px";
     }
 
     exportUrl() {
@@ -577,6 +647,7 @@ display: flex;
         urlParams.set('taille', this.logo.style.fontSize);
         urlParams.set('pos', this.logo.style.textAlign);
         urlParams.set('police', this.logo.style.fontFamily);
+        urlParams.set('control', this.controls);
 
         urlParams.set('colorB', this.logo.style.borderColor);
         urlParams.set('lb', this.logo.style.borderWidth);
@@ -585,6 +656,24 @@ display: flex;
         urlParams.set('anim', this.logo.classList[0]);
 
         window.location.search = urlParams;
+    }
+
+    changeControl() {
+        console.log('aaa', this.controls);
+        if (this.controls === 'true' || this.controls === true) {
+            this.controls = false;
+        } else {
+            this.controls = true;
+        }
+
+        console.log('bbb', this.controls);
+        if (this.controls) {
+
+            this.shadowRoot.querySelector("#btnEdi").style.display = 'none';
+        } else {
+            this.shadowRoot.querySelector("#btnEdi").style.display = 'block';
+
+        }
     }
 
     changeBorderImage(event) {
@@ -618,12 +707,9 @@ display: flex;
         console.log(file)
         //this.logo.style.background = "url(" + getBaseURL() + file;
         // this.shadowRoot.querySelector('#myImg').src = file.name;
-        var reader = new FileReader();
-
-        // reader.readAsDataURL(file);
-        reader.loadstart(file)
-        reader.progress(file)
-        console.log(reader.result)
+        URL.createObjectURL(e.target.files[0]);
+        console.log(URL.createObjectURL(e.target.files[0]));
+        this.logo.style.background = "url(" + URL.createObjectURL(e.target.files[0]);
     }
 
 
